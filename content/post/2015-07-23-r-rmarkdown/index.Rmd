@@ -1,0 +1,278 @@
+---
+title: "CEO Compensation and Board Structure"
+author: "Ziru NIE"
+date: 2020-12-20
+categories: ["R"]
+tags: ["R Markdown", "plot", "regression"]
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+#install.packages("plm")
+#install.packages("outliers")
+#install.packages("broom")
+#install.packages("knitr")
+library(broom)
+library(tidyverse)
+library(dplyr)
+library(plm)
+library(outliers)
+library(knitr)
+```
+
+Github Repo: https://github.com/Byron-Nie/STA304-Final-Project
+
+Data can be requested from Wharton Research Data Services (WRDS) at wrds.wharton.upenn.edu.
+
+Please check Section V. References for further information.
+```{r, echo=FALSE}
+mydata <- read.csv("/cloud/project/FinalData.csv")
+apple <- read.csv("/cloud/project/AppleData.csv")
+```
+
+# Abstract
+In response to the corporate scandals in 2001 and 2002 (specifically Enron and WorldCom accounting scandals), the federal government set a new law that requires public companies to reinforce their board structure and improve audit quality, called The Sarbanes–Oxley Act of 2002 (SOX). We adopt difference-in-difference approach to the data of 1122 firms to understand the effect of new government supervision on CEO compensation. We show that board independence negatively affects the CEO compensation while the independences of other committees have no significant impact on CEO compensation. 
+
+# Keywords
+CEO, Compensation, Board Structure, Board Independence, Policy, Economics, Finance, Difference-in-Difference
+
+# I. Introduction and Literature Review
+We often get the impression from the press that CEOs are high-net-worth individuals with a considerable annual salary. However, it is never a “sit back and relax” job after someone becomes a CEO of a firm. The CEOs of listed companies could also be vulnerable when they do not have a controlling share of the company that they can be voted out by the board if their performances are falling short or the “barbarians at the gate” force someone to replace the CEO as they get more controlling power over the board. Moreover, the compensations of the CEOs are primarily affected by the reviewing and approving of the compensation committee in the companies. Literature has argued that, for companies with a larger number of independent board members, the CEOs are more likely to be replaced when their performances are not as expected (Stein and Plaza, 2011). In a perfect world, a performance-based compensation plan helps the organizations to reach the balance between the cost of assessment and the perceived payments. 
+
+However, between the years 2000 and 2002, a series of large listed corporations in the U.S. committed crimes of fraud, which were mainly due to lack of supervision on conflict of interest and compensation plans within each company. Therefore, the Sarbanes-Oxley Act was carried out in July 2002 to reinforce government supervision on public companies. The act focuses on the robustness of independency of boards and it sets a minimum requirement on the proportion of independent directors on board to take the potentially riotous CEO compensation plan under control. Naturally, this gives rise to a question that sticks around for many years: Does board structure affect CEO compensation?
+
+There are many works of literature and hypotheses that looked into this question, but it seems they never stop the debate and come up with a conclusion. Chhaocharia and Grinstein (2009, henceforth CG) argued in their paper that the CEO compensation will decrease by 17% if the firms that once were not compliant with the Sarbanes-Oxley Act in 2002 and other new rules of the major exchanges became compliant. However, Guthrie, Sokolowsky, and Wan (henceforth GSW) criticized CG in their revisit paper (2012, henceforth CG-R) that the above conclusion was unduly affected by two outliers, specifically Steve Jobs at Apple and Kosta Kartsotis at Fossil and therefore should not be included in the analysis. CG (2012) emphasized that “Apple is a prime example of the strong relation between compensation practices and board structure, and therefore should not be ignored.” In GSW’s rejoinder (2012), they questioned the robustness of CG-R’s result because of potential sample selection bias and more outlier effects.
+
+Whether the board structure affects the CEO compensation positively or negatively, understanding the relationships between board structure and CEO compensation is still important for policymakers that it helps prevent CEO to extract rent or demand pays that beyond equilibrium level through their influences on the boards and the companies. Overall, it helps to address agency problems and to construct a healthier workplace. In our paper, we will make use of the Company financials, CEO compensation, and Director-related data requested from WRDS, with the time range from 2000 to 2005, to impose difference-in-difference models to show that board independence negatively affects CEO compensation, but the independences of other committees do not have significant relationships with the CEO pay.
+
+The remainder of this paper is organized as follows. Section II describes the data and introduces the regression models on potential factors that would affect CEO compensation. Section III analyzes the variables and results. Section IV summarizes the ideas, states the conclusions, further criticizes the weakness, and reveals what should be done next.
+
+# II. Methodology
+## Data
+### Data Cleaning
+As mentioned above, data of Company Financials, CEO Compensation data, and Director-related data from 2000 to 2005 were retrieved from WRDS and downloaded separately as three .dta files. Therefore, we used STATA for the data cleaning process.
+
+Firstly, for CEO Compensation data, "CEOANN" in the original dataset represents if the executive is the CEO of the company in that specific fiscal year. For our research purposes that we only care about the CEO compensation, so data with "CEOANN" != "CEO" were removed.
+
+Next, we merged the CEO Compensation data with Company Financials data by Ticker symbols and Years to make sure that each CEO is matched with his/her own company in that year. In this context, we have no choice but to remove companies with no Ticker symbol recorded because the names of companies could vary from the three datasets with minor changes, such as Apple Inc. v.s. Apple Computer, and there are over 80,000 names in our original dataset (therefore, 92 observations were deleted).
+
+Thirdly, the Director-related data, also known as company governance data, includes all the information about executives, such as the classification of directors that states if the director is independent, employee, or linked. If the proportions of independent directors are higher than 50%, we regard the board as independent.
+
+Same logic with the committee factors, e.g. if AUDIT_MEMBERSHIP = 1, it means the director is affiliated with the audit committee. We calculate the percentage of independent directors for Nominating Committee (Nom), Company Gov. Committee (CG), Compensation Committee(Comp), and Audit Committee(Audit) for each company in each year by its independent classification and non-membership of the committees. After, we generate dummy variables of Nom, CG, Comp, Audit that equal to 1 if the majority of directors in that committee is independent. The dummy variable of "after" equals 0 if the fiscal year is before 2002, vise versa. 
+
+Finally, we combine these three data into one dataset and conduct regression analysis with R Studio.
+
+### Data Specifics
+The target population of our regression is all the firms in the world. The frame is all the listed companies in the U.S. between 2000 and 2005, which contains 1247 distinct firms for the calculation of governance characteristics. However, we deleted the outliers in the frame. Therefore, the sample contains 1122 firms for the DID regression (Justification in Subsection "Model" below). To get a preliminary idea of what the dataset looks like, the first couple lines of data are shown below in Table 1^[Notice that the 2000 data for Agilent Technologies is missing because of the data record problem. The same issue could happen to some of the other data because of data record problems or data selection criterion that was specified in Subsection of "Data Cleaning". In an ideal way, the table should contain the 2000-2005 data for each company]:
+
+```{r, echo=FALSE}
+mydata$after = ifelse(mydata$YEAR%in%c(2000,2001), 0, 1)
+mytestdata <- mydata %>% select(YEAR, CONAME, EXEC_FULLNAME, MKTVAL, SALES, 
+                                ROA, Majority_Independent, Nom, CG, Comp, Audit, after)
+
+kable(head(rename(mytestdata, Year = YEAR, Company = CONAME, CEO = EXEC_FULLNAME,
+                  Sales = SALES,
+                  MajIndep = Majority_Independent), 6), 
+      caption = "Data Overview", align = "lclcc")
+```
+
+To control for firm size, we take the natural log of market capitalization (MKTVAL) and the natural log of net sales (SALES). Total Compensation is composed of salary, bonus, other annual, restricted stock grants, and LTI (variable TDC1 in the dataset). Equity-based compensation is the Black-Scholes value of Option Grants (variable OPTION_AWARDS_BLK_VALUE in the dataset). Nonequity-based compensation is calculated as total compensation (TDC1) minus equity-based compensation. Market Cap is the year-end market value of the firms (variable MKTVAL in the dataset). SALES stands for net sales for a company in that year. ROA stands for return on assets, which is a measure of financial performance. Generally, the higher the better. Therefore, SALES and ROA are included as independent factors because we assume, naturally, a positive relationship between CEO Compensation and company performances. The dummy variable of Majority_Independent equals 1 if the majority of directors in a company in that year is independent. Dummy variables of Nom, CG, Comp, and Audit stand for the independence of the corresponding committee.
+
+## Model
+We first take a look at the regression result from simple multiple regression to get a general idea of the relationship between CEO compensation and the independent variables. Table 2 shows the regression results from simple multiple regression. Notice that this regression just serves as a comparison to the difference-in-difference models below. Figure 1 shows the boxplot of Total Compensation and tells us the distribution of pays. In addition, Figure 1 also helps identify potential outliers.
+```{r, echo=FALSE}
+mymodel <- lm(TDC1 ~ log(MKTVAL)+log(SALES) + ROA + as.factor(Majority_Independent) +
+                as.factor(Nom) + as.factor(CG) + as.factor(Comp) + 
+                as.factor(Audit), data = mydata)
+kable(tidy(mymodel), caption = "Regression Results of Simple Multiple Regression")
+
+mydata %>% ggplot(aes(x = YEAR, y = TDC1, group = YEAR), group = TICKER) + 
+  geom_boxplot() + 
+  labs(title = "Figure 1: CEO Compensation", x = "Year", 
+       y = "Total Compensation (k$)", caption = "Source: WRDS") 
+
+```
+As Figure 1 shows, some potential outliers are included in the dataset. The one on the top left corner in Figure 1 is the total compensation of Steve Jobs at Apple. To illustrate how volatile the payment structure of Steve Jobs was, the complete compensation structure of Steve Jobs is printed as bellow in Table 3. The tests for outliers are also conducted on the lowest and highest values of the dataset. The test results are shown in Table 4 and Table 5.
+
+```{r, echo=FALSE}
+knitr::kable(apple, align = "lccrr", caption = "Compensation Structure for Steve Jobs")
+test1 <- grubbs.test(mydata$TDC1, opposite = TRUE)
+kable(tidy(test1), caption = "Outlier Test for the Lowest Value in the Data")
+test2 <- grubbs.test(mydata$TDC1)
+kable(tidy(test2), caption = "Outlier Test for the Highest Value in the Data")
+```
+It is not hard to tell that Steve Jobs received compensation packages with fairly large standard deviation. He received the highest compensation as well as the lowest one between the period of 2000-2005, which are both outliers. After considering the outliers for our model, we observe some changes to the significance of the regression results. Additionally, excluding outliers increases the $R^2$ of our models.
+
+Although CG (2012) argued in their paper that, what happened to Steve Jobs is a typical example of how CEO compensation would be affected by the board structure. As a matter of fact, board composures and internal control systems could be very different from company to company. Take Apple as an example, two of Steve Jobs's closest friend, Campbell, and Ellison, were considered independent directors. It is not possible to consider every interlocking relationship. However, at least, excluding some outliers seems to be a better decision, both statistically and economically.
+
+Therefore, we only include the data that are within 2 standard deviations of the mean of total compensation (TDC1). Additionally, we exclude the extreme cases that some CEO only took 1 dollar for their annual compensation.
+```{r, echo= FALSE}
+mydatawoo <- mydata %>%
+  group_by(TICKER) %>%
+  filter(!(abs(TDC1 - median(TDC1)) > 2*sd(TDC1))) %>% 
+  filter(TDC1 != 0.001)
+```
+
+To continue our study, we use the difference-in-difference approach (DID) to compare changes in compensation between firms that were already complying with the SOX and firms that were not complying with the act, which is the treatment group and the control group, respectively. DID is appropriate in social sciences researches. Besides, it helps identify the potential effects on the treatment group by comparing the outcomes of the control group over time. Specifically, we focus on four board structure variables that were required by SOX:
+
+* Majority of Independent Directors on Board
+* Independence of Compensation Committee
+* Independence of Audit Committee
+* Independence of Nominating Committee
+
+The regression model is as follow:
+
+$TotalCompensation_i = \beta_1 * log(MarketValue_i) + \beta_2 * ReturnOnAsset_i + \beta_3 * log(Sales_i) + \beta_4 * After_i + \beta_5 * CharacteristicsOfBoards_i + \beta_6 * After_i*CharacteristicsOfBoards_i$
+
+* $TotalComepnsation_i$ = Total Compensation (in K$): Salary + Bonus + Other Annual + Restriced Stock Grants + LTI 
+  + ("TDC1" in the data)
+* $MarketValue_i$ = Market Value (Fiscal Year-End, in M$) 
+  + ("MKTVAL" in the data)
+* $ReturnOnAsset_i$ = Return on Assets (%)
+  + ("ROA" in the data)
+* $Sales_i$ = Net Sales (in M$)
+  + ("SALES" in the data)
+* $After_i$ = Dummy variable that = 1 when variable "Year" is after 2001, otherwise = 0 
+  + ("after" in the data)
+* $CharacteristicsOfBoards_i$ = Dummy variable of the characteristics or classification of board or committee, = 1 if the board or committee is independent, otherwise = 0
+  + ("Majority_Independent", "Nom", "CG", "Comp", "Audit" in the data, selection of variable depends on the selection of model)
+* $After_i*CharacteristicsOfBoards_i$ = Interaction term of $After_i$ and $CharacteristicsOfBoards_i$
+
+In the above specification, the variables $\beta_1$, $\beta_2$, $\beta_3$ represent the average change in the CEO compensation if the log of market value, return on asset, and log of sales change by 1 unit, respectively. $\beta_4$ represents the average change of CEO compensation after the release of the SOX. $\beta_5$ represents the average difference of CEO compensation between firms that were already complying with the act and the firms that had not to comply with it. $\beta_6$ represents the average difference of CEO pay between firms that were not complying with the board independence requirement but became compliant after the release of the SOX.
+
+# III. Results
+### DID Regression on Majority Independent Directors on Board
+$TotalCompensation_i = \beta_1 * log(MarketValue_i) + \beta_2 * ReturnOnAsset_i + \beta_3 * log(Sales_i) + \beta_4 * After_i + \beta_5 * MajorityIndependent_i + \beta_6 * After_i*MajorityIndependent_i$
+```{r, echo= FALSE}
+mydatawoo$after = ifelse(mydatawoo$YEAR%in%c(2000,2001), 0, 1)
+plm1 = plm(TDC1 ~ log(MKTVAL)+ROA+log(SALES)+after+
+             Majority_Independent+after:Majority_Independent,
+data = mydatawoo, index=c("CONAME", "YEAR"), model="within")
+kable(tidy(plm1), caption = "Regression Results of DID on Majority Independent Directors on Board")
+```
+
+### DID Regression on Independence of Compensation Committee
+
+[Put Appendix A here]
+
+### DID Regression on Independence of Audit Committee
+
+[Put Appendix B here]
+
+### DID Regression on Independence of Nominating Committee
+
+[Put Appendix C here]
+
+From the DID regression tables above, we observe a positive relationship between CEO compensation and firm size, and net sales, which means CEOs of larger or more profitable companies tend to get more pay. This is also empirically supported by some scholars (e.g. Newman and Mozes, 1999). Notice that with the lapse of time, the company size of each of the firms in our sample typically get larger. It forms another aspect to understand the reverse causal relationship between company performances and economic cycles. This consideration is supported by some scholars who show that CEO compensation gets higher as the firm size gets larger (Boyd, 1994).
+
+In DID model for Majority_Independent (Table 6), if log(MarketValue) increases by 1 unit, CEOs get paid more by 2,357,797 dollars on average; if log(Sales) increases by 1 unit, the average increase of CEO pay is 1,600,032 dollars. The average decrease of CEO pay after a company became compliant with SOX is 1,779,994 dollars. There is an interesting fact that if a firm was compliant with the rules, the CEO of that firm gets 2,341,700 dollars more than his/her non-compliant counterpart. This could be the case that many firms were already informed of the release of the new rules and they had already changed their board structures for better management of the CEOs (GSW, 2012b). Therefore, it explains the difference in pays between CEOs from companies with fast reactions (which underlies good board structure) and companies that were not making adjustments to the new era.
+
+We also observe that only the interaction terms for "Majority_Independent" are significant. Therefore, we arbitrarily say the independences of the Nominating Committee, Audit Committee, and Compensation Committee are irrelevant to the CEO pay. 
+
+# IV. Discussion
+## Summary
+By adopting the difference-in-difference approach, we examine the average difference of CEO compensation before and after the implementation of SOX. For example, the interaction term of "after" and "Majority_Independent" states the difference of CEO pay if a firm that did not have a majority of independent directors on its board transformed to a complaint firm after 2002. From the DID regression tables, we observe a positive relationship between CEO compensation and firm size, and net sales. The average decrease of CEO pay after a company became compliant with SOX is 1,779,994 dollars, which means their average pay became 16.4% lower than before. 
+
+## Conclusions
+With the difference-in-difference approach, we discover that (i) board independence negatively affects the CEO compensation, which justifies the managerial power hypothesis; (ii) Companies that were already compliant with SOX before 2001 typically paid more to their CEOs; (iii) No significant evidence that shows relationships between CEO pay and the independence of Compensation Committee, the independence of Audit Committee, or the independence of Nominating Committee. 
+
+The implication behind these is that if the board is filled with more independent directors, we would probably develop a more unbiased workplace and we could value CEOs with their contributions and performances instead of their relationships with other directors. A highly independent board also helps prevent the CEO from exploiting his/her power over the whole company. Besides, it reduces income inequality, at least to some extent, as the voice of the "eat the rich" movement becomes louder and louder that people do not agree with 1% of the world accumulating most of the world's wealth. Therefore, we should reinforce the market and government supervision on the board composures of listed companies.
+
+## Weakness & Next Steps
+Although the managerial power hypothesis holds in our study, it is still questionable about the effectiveness of the data for independent committee members. Board composures and internal control systems could be very different from company to company. Some directors were just holding shares on behalf of the CEO. Therefore, the classification of directors in the original dataset could be compromised. Take Apple as an example, two of Steve Jobs's closest friends, Campbell and Ellison, were considered independent directors. 
+
+Another drawback is we did not take firm-specific factors or market performances into consideration. The decrease in CEO compensation after 2002 could be caused by the downward trend of business cycles in some industries, or bear market, after the burst of the "Internet Bubble". This could also be the reason that caused a low Adjusted $R^2$.
+
+Further study should focus on the effectiveness of independent committee members on CEO pay and their influence on the managerial power of the CEOs. The model could also add control variables for firm-specific factors and more potential independent variables.
+
+# V. References
+Boyd, B. K. (1994). Board control and ceo compensation. Strategic Management Journal, 15(5), 335–344. https://doi.org/https://doi.org/10.1002/smj.4250150502
+
+Chhaochharia, V., & Grinstein, Y. (2009). Ceo compensation and board structure. The Journal of Finance, 64(1), 231–261. https://doi.org/https://doi.org/10.1111/j.1540-6261.2008.01433.x
+
+Chhaochharia, V., Grinstein, Y., Brav, A., Green, R., & Michaely, R. (2012). Ceo compensation and board structure – there is an effect after all .
+
+Guthrie, K., Sokolowsky, J., & Wan, K.-M. (2012a). Ceo compensation and board structure revisited. The Journal of Finance, 67(3), 1149–1168. https://doi.org/https://doi.org/10.1111/j.1540-6261.2012.01744.x
+
+Guthrie, K., Sokolowsky, J., & Wan, K.-M. (2012b). Ceo compensation and board structure – rejoinder (SSRN Scholarly Paper ID 2084630). Social Science Research Network. https://papers.ssrn.com/abstract=2084630
+
+Newman, H. A., & Mozes, H. A. (1999). Does the composition of the compensation committee influence ceo compensation practices? Financial Management, 28(3), 41–53. https://doi.org/10.2307/3666182
+
+Sarbanes-Oxley Act of 2002. (2002). https://www.govinfo.gov/content/pkg/COMPS-1883/pdf/COMPS-1883.pdf
+
+Stein, G., & Plaza, S. (2011). The role of the independent director in ceo supervision and turnover (SSRN Scholarly Paper ID 1782707). Social Science Research Network. https://papers.ssrn.com/abstract=1782707
+
+### Data were provided by:
+
+CEO compensation: Wharton Research Data Services. "Compustat Executive Compensation " wrds.wharton.upenn.edu, accessed 12/05/2020.
+
+Company Financials: Wharton Research Data Services. "WRDS" wrds.wharton.upenn.edu, accessed 2020-12-05.
+
+Director Data: Wharton Research Data Services. "RiskMetrics (ISS) " wrds.wharton.upenn.edu, accessed 12/05/2020.
+
+### Data Cleaning were Processed with:
+
+StataCorp. 2017. Stata Statistical Software: Release 15. College Station, TX: StataCorp LLC.
+
+### Regression Analyses were Processed with: 
+
+RStudio Team (2018). RStudio: Integrated Development for R. RStudio, Inc., Boston, MA URL
+  http://www.rstudio.com/.
+
+### R packages were Supported by:
+
+Croissant Y, Millo G (2008). “Panel Data Econometrics in R: The plm Package.” _Journal of
+Statistical Software_, *27*(2), 1-43. doi: 10.18637/jss.v027.i02 (URL:
+https://doi.org/10.18637/jss.v027.i02).
+
+David Robinson, Alex Hayes and Simon Couch (2020). broom: Convert Statistical Objects into Tidy
+  Tibbles. R package version 0.7.2. https://CRAN.R-project.org/package=broom
+
+Hadley Wickham, Romain François, Lionel Henry and Kirill Müller (2020). dplyr: A Grammar of Data
+  Manipulation. R package version 1.0.2. https://CRAN.R-project.org/package=dplyr
+
+Lukasz Komsta (2011). outliers: Tests for outliers. R package version 0.14.
+  https://CRAN.R-project.org/package=outliers
+
+Wickham et al., (2019). Welcome to the tidyverse. Journal of Open Source Software, 4(43), 1686,
+  https://doi.org/10.21105/joss.01686
+  
+Yihui Xie (2020). knitr: A General-Purpose Package for Dynamic Report Generation in R. R package
+  version 1.30.
+
+## Appendix A:
+
+### DID Regression on Independence of Compensation Committee
+
+$TotalCompensation_i = \beta_1 * log(MarketValue_i) + \beta_2 * ReturnOnAsset_i + \beta_3 * log(Sales_i) + \beta_4 * After_i + \beta_5 * IndepCompensationCommittee_i + \beta_6 * After_i*IndepCompensationCommittee_i$
+
+```{r, echo = FALSE}
+plm2 = plm(TDC1 ~ log(MKTVAL)+ROA+log(SALES)+after+Comp+
+             after:Comp, data = mydatawoo,
+index=c("CONAME", "YEAR"), model="within")
+kable(tidy(plm2), caption = "Regression Results of DID on Independence of Compensation Committee")
+```
+
+## Appendix B:
+
+### DID Regression on Independence of Audit Committee
+
+$TotalCompensation_i = \beta_1 * log(MarketValue_i) + \beta_2 * ReturnOnAsset_i + \beta_3 * log(Sales_i) + \beta_4 * After_i + \beta_5 * IndepAuditCommittee_i + \beta_6 * After_i*IndepAuditCommittee_i$
+```{r, echo = FALSE}
+plm3 = plm(TDC1 ~ log(MKTVAL)+ROA+log(SALES)+after+Audit+
+             after:Audit, data = mydatawoo,
+index=c("CONAME", "YEAR"), model="within")
+kable(tidy(plm3), caption = "Regression Results of DID on Independence of Audit Committee")
+```
+
+## Appendix C: 
+
+### DID Regression on Independence of Nominating Committee
+
+$TotalCompensation_i = \beta_1 * log(MarketValue_i) + \beta_2 * ReturnOnAsset_i + \beta_3 * log(Sales_i) + \beta_4 * After_i + \beta_5 * IndepNominatingCommittee_i + \beta_6 * After_i*IndepNominatingCommittee_i$
+```{r, echo = FALSE}
+plm4 = plm(TDC1 ~ log(MKTVAL)+ROA+log(SALES)+after+Nom+
+             after:Nom, data = mydatawoo,
+index=c("CONAME", "YEAR"), model="within")
+kable(tidy(plm4), caption = "Regression Results of DID on Independence of Nominating Committee")
+```

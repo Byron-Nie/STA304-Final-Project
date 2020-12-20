@@ -1,0 +1,750 @@
+---
+title: "CEO Compensation and Board Structure"
+author: "Ziru NIE"
+date: 2020-12-20
+categories: ["R"]
+tags: ["R Markdown", "plot", "regression"]
+---
+
+
+
+<p>Github Repo: <a href="https://github.com/Byron-Nie/STA304-Final-Project" class="uri">https://github.com/Byron-Nie/STA304-Final-Project</a></p>
+<p>Data can be requested from Wharton Research Data Services (WRDS) at wrds.wharton.upenn.edu.</p>
+<p>Please check Section V. References for further information.</p>
+<div id="abstract" class="section level1">
+<h1>Abstract</h1>
+<p>In response to the corporate scandals in 2001 and 2002 (specifically Enron and WorldCom accounting scandals), the federal government set a new law that requires public companies to reinforce their board structure and improve audit quality, called The Sarbanes–Oxley Act of 2002 (SOX). We adopt difference-in-difference approach to the data of 1122 firms to understand the effect of new government supervision on CEO compensation. We show that board independence negatively affects the CEO compensation while the independences of other committees have no significant impact on CEO compensation.</p>
+</div>
+<div id="keywords" class="section level1">
+<h1>Keywords</h1>
+<p>CEO, Compensation, Board Structure, Board Independence, Policy, Economics, Finance, Difference-in-Difference</p>
+</div>
+<div id="i.-introduction-and-literature-review" class="section level1">
+<h1>I. Introduction and Literature Review</h1>
+<p>We often get the impression from the press that CEOs are high-net-worth individuals with a considerable annual salary. However, it is never a “sit back and relax” job after someone becomes a CEO of a firm. The CEOs of listed companies could also be vulnerable when they do not have a controlling share of the company that they can be voted out by the board if their performances are falling short or the “barbarians at the gate” force someone to replace the CEO as they get more controlling power over the board. Moreover, the compensations of the CEOs are primarily affected by the reviewing and approving of the compensation committee in the companies. Literature has argued that, for companies with a larger number of independent board members, the CEOs are more likely to be replaced when their performances are not as expected (Stein and Plaza, 2011). In a perfect world, a performance-based compensation plan helps the organizations to reach the balance between the cost of assessment and the perceived payments.</p>
+<p>However, between the years 2000 and 2002, a series of large listed corporations in the U.S. committed crimes of fraud, which were mainly due to lack of supervision on conflict of interest and compensation plans within each company. Therefore, the Sarbanes-Oxley Act was carried out in July 2002 to reinforce government supervision on public companies. The act focuses on the robustness of independency of boards and it sets a minimum requirement on the proportion of independent directors on board to take the potentially riotous CEO compensation plan under control. Naturally, this gives rise to a question that sticks around for many years: Does board structure affect CEO compensation?</p>
+<p>There are many works of literature and hypotheses that looked into this question, but it seems they never stop the debate and come up with a conclusion. Chhaocharia and Grinstein (2009, henceforth CG) argued in their paper that the CEO compensation will decrease by 17% if the firms that once were not compliant with the Sarbanes-Oxley Act in 2002 and other new rules of the major exchanges became compliant. However, Guthrie, Sokolowsky, and Wan (henceforth GSW) criticized CG in their revisit paper (2012, henceforth CG-R) that the above conclusion was unduly affected by two outliers, specifically Steve Jobs at Apple and Kosta Kartsotis at Fossil and therefore should not be included in the analysis. CG (2012) emphasized that “Apple is a prime example of the strong relation between compensation practices and board structure, and therefore should not be ignored.” In GSW’s rejoinder (2012), they questioned the robustness of CG-R’s result because of potential sample selection bias and more outlier effects.</p>
+<p>Whether the board structure affects the CEO compensation positively or negatively, understanding the relationships between board structure and CEO compensation is still important for policymakers that it helps prevent CEO to extract rent or demand pays that beyond equilibrium level through their influences on the boards and the companies. Overall, it helps to address agency problems and to construct a healthier workplace. In our paper, we will make use of the Company financials, CEO compensation, and Director-related data requested from WRDS, with the time range from 2000 to 2005, to impose difference-in-difference models to show that board independence negatively affects CEO compensation, but the independences of other committees do not have significant relationships with the CEO pay.</p>
+<p>The remainder of this paper is organized as follows. Section II describes the data and introduces the regression models on potential factors that would affect CEO compensation. Section III analyzes the variables and results. Section IV summarizes the ideas, states the conclusions, further criticizes the weakness, and reveals what should be done next.</p>
+</div>
+<div id="ii.-methodology" class="section level1">
+<h1>II. Methodology</h1>
+<div id="data" class="section level2">
+<h2>Data</h2>
+<div id="data-cleaning" class="section level3">
+<h3>Data Cleaning</h3>
+<p>As mentioned above, data of Company Financials, CEO Compensation data, and Director-related data from 2000 to 2005 were retrieved from WRDS and downloaded separately as three .dta files. Therefore, we used STATA for the data cleaning process.</p>
+<p>Firstly, for CEO Compensation data, “CEOANN” in the original dataset represents if the executive is the CEO of the company in that specific fiscal year. For our research purposes that we only care about the CEO compensation, so data with “CEOANN” != “CEO” were removed.</p>
+<p>Next, we merged the CEO Compensation data with Company Financials data by Ticker symbols and Years to make sure that each CEO is matched with his/her own company in that year. In this context, we have no choice but to remove companies with no Ticker symbol recorded because the names of companies could vary from the three datasets with minor changes, such as Apple Inc. v.s. Apple Computer, and there are over 80,000 names in our original dataset (therefore, 92 observations were deleted).</p>
+<p>Thirdly, the Director-related data, also known as company governance data, includes all the information about executives, such as the classification of directors that states if the director is independent, employee, or linked. If the proportions of independent directors are higher than 50%, we regard the board as independent.</p>
+<p>Same logic with the committee factors, e.g. if AUDIT_MEMBERSHIP = 1, it means the director is affiliated with the audit committee. We calculate the percentage of independent directors for Nominating Committee (Nom), Company Gov. Committee (CG), Compensation Committee(Comp), and Audit Committee(Audit) for each company in each year by its independent classification and non-membership of the committees. After, we generate dummy variables of Nom, CG, Comp, Audit that equal to 1 if the majority of directors in that committee is independent. The dummy variable of “after” equals 0 if the fiscal year is before 2002, vise versa.</p>
+<p>Finally, we combine these three data into one dataset and conduct regression analysis with R Studio.</p>
+</div>
+<div id="data-specifics" class="section level3">
+<h3>Data Specifics</h3>
+<p>The target population of our regression is all the firms in the world. The frame is all the listed companies in the U.S. between 2000 and 2005, which contains 1247 distinct firms for the calculation of governance characteristics. However, we deleted the outliers in the frame. Therefore, the sample contains 1122 firms for the DID regression (Justification in Subsection “Model” below). To get a preliminary idea of what the dataset looks like, the first couple lines of data are shown below in Table 1<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>:</p>
+<table>
+<caption><span id="tab:unnamed-chunk-2">Table 1: </span>Data Overview</caption>
+<colgroup>
+<col width="4%" />
+<col width="22%" />
+<col width="17%" />
+<col width="9%" />
+<col width="8%" />
+<col width="6%" />
+<col width="8%" />
+<col width="3%" />
+<col width="3%" />
+<col width="5%" />
+<col width="5%" />
+<col width="5%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="left">Year</th>
+<th align="center">Company</th>
+<th align="left">CEO</th>
+<th align="center">MKTVAL</th>
+<th align="center">Sales</th>
+<th align="left">ROA</th>
+<th align="center">MajIndep</th>
+<th align="left">Nom</th>
+<th align="center">CG</th>
+<th align="center">Comp</th>
+<th align="left">Audit</th>
+<th align="center">after</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">2001</td>
+<td align="center">AGILENT TECHNOLOGIES INC</td>
+<td align="left">Edward W. Barnholt</td>
+<td align="center">10258.386</td>
+<td align="center">8396.000</td>
+<td align="left">-5.084</td>
+<td align="center">1</td>
+<td align="left">0</td>
+<td align="center">0</td>
+<td align="center">1</td>
+<td align="left">1</td>
+<td align="center">0</td>
+</tr>
+<tr class="even">
+<td align="left">2002</td>
+<td align="center">AGILENT TECHNOLOGIES INC</td>
+<td align="left">Edward W. Barnholt</td>
+<td align="center">6417.208</td>
+<td align="center">6010.000</td>
+<td align="left">-12.459</td>
+<td align="center">1</td>
+<td align="left">1</td>
+<td align="center">1</td>
+<td align="center">1</td>
+<td align="left">0</td>
+<td align="center">1</td>
+</tr>
+<tr class="odd">
+<td align="left">2003</td>
+<td align="center">AGILENT TECHNOLOGIES INC</td>
+<td align="left">Edward W. Barnholt</td>
+<td align="center">11849.659</td>
+<td align="center">6056.000</td>
+<td align="left">-28.426</td>
+<td align="center">1</td>
+<td align="left">1</td>
+<td align="center">1</td>
+<td align="center">0</td>
+<td align="left">0</td>
+<td align="center">1</td>
+</tr>
+<tr class="even">
+<td align="left">2004</td>
+<td align="center">AGILENT TECHNOLOGIES INC</td>
+<td align="left">Edward W. Barnholt</td>
+<td align="center">12169.286</td>
+<td align="center">7181.000</td>
+<td align="left">4.946</td>
+<td align="center">1</td>
+<td align="left">1</td>
+<td align="center">1</td>
+<td align="center">0</td>
+<td align="left">0</td>
+<td align="center">1</td>
+</tr>
+<tr class="odd">
+<td align="left">2005</td>
+<td align="center">AGILENT TECHNOLOGIES INC</td>
+<td align="left">William P. Sullivan</td>
+<td align="center">15818.638</td>
+<td align="center">5139.000</td>
+<td align="left">2.089</td>
+<td align="center">1</td>
+<td align="left">1</td>
+<td align="center">1</td>
+<td align="center">0</td>
+<td align="left">0</td>
+<td align="center">1</td>
+</tr>
+<tr class="even">
+<td align="left">2004</td>
+<td align="center">AIRTRAN HOLDINGS INC</td>
+<td align="left">Joseph B. Leonard</td>
+<td align="center">917.290</td>
+<td align="center">1041.422</td>
+<td align="left">1.353</td>
+<td align="center">1</td>
+<td align="left">0</td>
+<td align="center">0</td>
+<td align="center">0</td>
+<td align="left">0</td>
+<td align="center">1</td>
+</tr>
+</tbody>
+</table>
+<p>To control for firm size, we take the natural log of market capitalization (MKTVAL) and the natural log of net sales (SALES). Total Compensation is composed of salary, bonus, other annual, restricted stock grants, and LTI (variable TDC1 in the dataset). Equity-based compensation is the Black-Scholes value of Option Grants (variable OPTION_AWARDS_BLK_VALUE in the dataset). Nonequity-based compensation is calculated as total compensation (TDC1) minus equity-based compensation. Market Cap is the year-end market value of the firms (variable MKTVAL in the dataset). SALES stands for net sales for a company in that year. ROA stands for return on assets, which is a measure of financial performance. Generally, the higher the better. Therefore, SALES and ROA are included as independent factors because we assume, naturally, a positive relationship between CEO Compensation and company performances. The dummy variable of Majority_Independent equals 1 if the majority of directors in a company in that year is independent. Dummy variables of Nom, CG, Comp, and Audit stand for the independence of the corresponding committee.</p>
+</div>
+</div>
+<div id="model" class="section level2">
+<h2>Model</h2>
+<p>We first take a look at the regression result from simple multiple regression to get a general idea of the relationship between CEO compensation and the independent variables. Table 2 shows the regression results from simple multiple regression. Notice that this regression just serves as a comparison to the difference-in-difference models below. Figure 1 shows the boxplot of Total Compensation and tells us the distribution of pays. In addition, Figure 1 also helps identify potential outliers.</p>
+<table>
+<caption><span id="tab:unnamed-chunk-3">Table 2: </span>Regression Results of Simple Multiple Regression</caption>
+<thead>
+<tr class="header">
+<th align="left">term</th>
+<th align="right">estimate</th>
+<th align="right">std.error</th>
+<th align="right">statistic</th>
+<th align="right">p.value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">(Intercept)</td>
+<td align="right">-17342.66661</td>
+<td align="right">1057.56491</td>
+<td align="right">-16.3986782</td>
+<td align="right">0.0000000</td>
+</tr>
+<tr class="even">
+<td align="left">log(MKTVAL)</td>
+<td align="right">2949.88953</td>
+<td align="right">190.15190</td>
+<td align="right">15.5133315</td>
+<td align="right">0.0000000</td>
+</tr>
+<tr class="odd">
+<td align="left">log(SALES)</td>
+<td align="right">53.31744</td>
+<td align="right">189.74388</td>
+<td align="right">0.2809969</td>
+<td align="right">0.7787232</td>
+</tr>
+<tr class="even">
+<td align="left">ROA</td>
+<td align="right">-31.06531</td>
+<td align="right">10.14222</td>
+<td align="right">-3.0629690</td>
+<td align="right">0.0022020</td>
+</tr>
+<tr class="odd">
+<td align="left">as.factor(Majority_Independent)1</td>
+<td align="right">271.61716</td>
+<td align="right">572.41981</td>
+<td align="right">0.4745069</td>
+<td align="right">0.6351571</td>
+</tr>
+<tr class="even">
+<td align="left">as.factor(Nom)1</td>
+<td align="right">-294.23535</td>
+<td align="right">1083.99419</td>
+<td align="right">-0.2714363</td>
+<td align="right">0.7860655</td>
+</tr>
+<tr class="odd">
+<td align="left">as.factor(CG)1</td>
+<td align="right">30.33874</td>
+<td align="right">1129.38870</td>
+<td align="right">0.0268630</td>
+<td align="right">0.9785700</td>
+</tr>
+<tr class="even">
+<td align="left">as.factor(Comp)1</td>
+<td align="right">433.62659</td>
+<td align="right">617.12610</td>
+<td align="right">0.7026548</td>
+<td align="right">0.4823003</td>
+</tr>
+<tr class="odd">
+<td align="left">as.factor(Audit)1</td>
+<td align="right">-301.28134</td>
+<td align="right">539.80013</td>
+<td align="right">-0.5581350</td>
+<td align="right">0.5767746</td>
+</tr>
+</tbody>
+</table>
+<p><img src="index_files/figure-html/unnamed-chunk-3-1.png" width="672" />
+As Figure 1 shows, some potential outliers are included in the dataset. The one on the top left corner in Figure 1 is the total compensation of Steve Jobs at Apple. To illustrate how volatile the payment structure of Steve Jobs was, the complete compensation structure of Steve Jobs is printed as bellow in Table 3. The tests for outliers are also conducted on the lowest and highest values of the dataset. The test results are shown in Table 4 and Table 5.</p>
+<table>
+<caption><span id="tab:unnamed-chunk-4">Table 3: </span>Compensation Structure for Steve Jobs</caption>
+<thead>
+<tr class="header">
+<th align="left">Year</th>
+<th align="center">CEO</th>
+<th align="center">Total.Compensation</th>
+<th align="right">Salary</th>
+<th align="right">Bonus</th>
+<th align="left">Restricted.Stock</th>
+<th align="center">Option.Awards</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">2000</td>
+<td align="center">Steven P. Jobs</td>
+<td align="center">600347.351</td>
+<td align="right">0.001</td>
+<td align="right">0.000</td>
+<td align="left">0</td>
+<td align="center">600347.35</td>
+</tr>
+<tr class="even">
+<td align="left">2001</td>
+<td align="center">Steven P. Jobs</td>
+<td align="center">83996.129</td>
+<td align="right">0.001</td>
+<td align="right">43511.534</td>
+<td align="left">0</td>
+<td align="center">0.00</td>
+</tr>
+<tr class="odd">
+<td align="left">2002</td>
+<td align="center">Steven P. Jobs</td>
+<td align="center">93016.179</td>
+<td align="right">0.001</td>
+<td align="right">2268.698</td>
+<td align="left">0</td>
+<td align="center">89444.68</td>
+</tr>
+<tr class="even">
+<td align="left">2003</td>
+<td align="center">Steven P. Jobs</td>
+<td align="center">74750.001</td>
+<td align="right">0.001</td>
+<td align="right">0.000</td>
+<td align="left">74750</td>
+<td align="center">0.00</td>
+</tr>
+<tr class="odd">
+<td align="left">2004</td>
+<td align="center">Steven P. Jobs</td>
+<td align="center">0.001</td>
+<td align="right">0.001</td>
+<td align="right">0.000</td>
+<td align="left">0</td>
+<td align="center">0.00</td>
+</tr>
+<tr class="even">
+<td align="left">2005</td>
+<td align="center">Steven P. Jobs</td>
+<td align="center">0.001</td>
+<td align="right">0.001</td>
+<td align="right">0.000</td>
+<td align="left">0</td>
+<td align="center">0.00</td>
+</tr>
+</tbody>
+</table>
+<table>
+<caption><span id="tab:unnamed-chunk-4">Table 3: </span>Outlier Test for the Lowest Value in the Data</caption>
+<thead>
+<tr class="header">
+<th align="right">statistic</th>
+<th align="right">p.value</th>
+<th align="left">method</th>
+<th align="left">alternative</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">0.4156313</td>
+<td align="right">1</td>
+<td align="left">Grubbs test for one outlier</td>
+<td align="left">lowest value 0.001 is an outlier</td>
+</tr>
+<tr class="even">
+<td align="right">0.9999690</td>
+<td align="right">1</td>
+<td align="left">Grubbs test for one outlier</td>
+<td align="left">lowest value 0.001 is an outlier</td>
+</tr>
+</tbody>
+</table>
+<table>
+<caption><span id="tab:unnamed-chunk-4">Table 3: </span>Outlier Test for the Highest Value in the Data</caption>
+<colgroup>
+<col width="12%" />
+<col width="9%" />
+<col width="32%" />
+<col width="45%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th align="right">statistic</th>
+<th align="right">p.value</th>
+<th align="left">method</th>
+<th align="left">alternative</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">41.5122548</td>
+<td align="right">0</td>
+<td align="left">Grubbs test for one outlier</td>
+<td align="left">highest value 600347.351 is an outlier</td>
+</tr>
+<tr class="even">
+<td align="right">0.6912261</td>
+<td align="right">0</td>
+<td align="left">Grubbs test for one outlier</td>
+<td align="left">highest value 600347.351 is an outlier</td>
+</tr>
+</tbody>
+</table>
+<p>It is not hard to tell that Steve Jobs received compensation packages with fairly large standard deviation. He received the highest compensation as well as the lowest one between the period of 2000-2005, which are both outliers. After considering the outliers for our model, we observe some changes to the significance of the regression results. Additionally, excluding outliers increases the <span class="math inline">\(R^2\)</span> of our models.</p>
+<p>Although CG (2012) argued in their paper that, what happened to Steve Jobs is a typical example of how CEO compensation would be affected by the board structure. As a matter of fact, board composures and internal control systems could be very different from company to company. Take Apple as an example, two of Steve Jobs’s closest friend, Campbell, and Ellison, were considered independent directors. It is not possible to consider every interlocking relationship. However, at least, excluding some outliers seems to be a better decision, both statistically and economically.</p>
+<p>Therefore, we only include the data that are within 2 standard deviations of the mean of total compensation (TDC1). Additionally, we exclude the extreme cases that some CEO only took 1 dollar for their annual compensation.</p>
+<p>To continue our study, we use the difference-in-difference approach (DID) to compare changes in compensation between firms that were already complying with the SOX and firms that were not complying with the act, which is the treatment group and the control group, respectively. DID is appropriate in social sciences researches. Besides, it helps identify the potential effects on the treatment group by comparing the outcomes of the control group over time. Specifically, we focus on four board structure variables that were required by SOX:</p>
+<ul>
+<li>Majority of Independent Directors on Board</li>
+<li>Independence of Compensation Committee</li>
+<li>Independence of Audit Committee</li>
+<li>Independence of Nominating Committee</li>
+</ul>
+<p>The regression model is as follow:</p>
+<p><span class="math inline">\(TotalCompensation_i = \beta_1 * log(MarketValue_i) + \beta_2 * ReturnOnAsset_i + \beta_3 * log(Sales_i) + \beta_4 * After_i + \beta_5 * CharacteristicsOfBoards_i + \beta_6 * After_i*CharacteristicsOfBoards_i\)</span></p>
+<ul>
+<li><span class="math inline">\(TotalComepnsation_i\)</span> = Total Compensation (in K$): Salary + Bonus + Other Annual + Restriced Stock Grants + LTI
+<ul>
+<li>(“TDC1” in the data)</li>
+</ul></li>
+<li><span class="math inline">\(MarketValue_i\)</span> = Market Value (Fiscal Year-End, in M$)
+<ul>
+<li>(“MKTVAL” in the data)</li>
+</ul></li>
+<li><span class="math inline">\(ReturnOnAsset_i\)</span> = Return on Assets (%)
+<ul>
+<li>(“ROA” in the data)</li>
+</ul></li>
+<li><span class="math inline">\(Sales_i\)</span> = Net Sales (in M$)
+<ul>
+<li>(“SALES” in the data)</li>
+</ul></li>
+<li><span class="math inline">\(After_i\)</span> = Dummy variable that = 1 when variable “Year” is after 2001, otherwise = 0
+<ul>
+<li>(“after” in the data)</li>
+</ul></li>
+<li><span class="math inline">\(CharacteristicsOfBoards_i\)</span> = Dummy variable of the characteristics or classification of board or committee, = 1 if the board or committee is independent, otherwise = 0
+<ul>
+<li>(“Majority_Independent”, “Nom”, “CG”, “Comp”, “Audit” in the data, selection of variable depends on the selection of model)</li>
+</ul></li>
+<li><span class="math inline">\(After_i*CharacteristicsOfBoards_i\)</span> = Interaction term of <span class="math inline">\(After_i\)</span> and <span class="math inline">\(CharacteristicsOfBoards_i\)</span></li>
+</ul>
+<p>In the above specification, the variables <span class="math inline">\(\beta_1\)</span>, <span class="math inline">\(\beta_2\)</span>, <span class="math inline">\(\beta_3\)</span> represent the average change in the CEO compensation if the log of market value, return on asset, and log of sales change by 1 unit, respectively. <span class="math inline">\(\beta_4\)</span> represents the average change of CEO compensation after the release of the SOX. <span class="math inline">\(\beta_5\)</span> represents the average difference of CEO compensation between firms that were already complying with the act and the firms that had not to comply with it. <span class="math inline">\(\beta_6\)</span> represents the average difference of CEO pay between firms that were not complying with the board independence requirement but became compliant after the release of the SOX.</p>
+</div>
+</div>
+<div id="iii.-results" class="section level1">
+<h1>III. Results</h1>
+<div id="did-regression-on-majority-independent-directors-on-board" class="section level3">
+<h3>DID Regression on Majority Independent Directors on Board</h3>
+<p><span class="math inline">\(TotalCompensation_i = \beta_1 * log(MarketValue_i) + \beta_2 * ReturnOnAsset_i + \beta_3 * log(Sales_i) + \beta_4 * After_i + \beta_5 * MajorityIndependent_i + \beta_6 * After_i*MajorityIndependent_i\)</span></p>
+<table>
+<caption><span id="tab:unnamed-chunk-6">Table 4: </span>Regression Results of DID on Majority Independent Directors on Board</caption>
+<thead>
+<tr class="header">
+<th align="left">term</th>
+<th align="right">estimate</th>
+<th align="right">std.error</th>
+<th align="right">statistic</th>
+<th align="right">p.value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">log(MKTVAL)</td>
+<td align="right">2357.79699</td>
+<td align="right">322.63773</td>
+<td align="right">7.3078774</td>
+<td align="right">0.0000000</td>
+</tr>
+<tr class="even">
+<td align="left">ROA</td>
+<td align="right">-41.21917</td>
+<td align="right">10.43567</td>
+<td align="right">-3.9498333</td>
+<td align="right">0.0000795</td>
+</tr>
+<tr class="odd">
+<td align="left">log(SALES)</td>
+<td align="right">1600.03232</td>
+<td align="right">510.88267</td>
+<td align="right">3.1318978</td>
+<td align="right">0.0017491</td>
+</tr>
+<tr class="even">
+<td align="left">after</td>
+<td align="right">441.18552</td>
+<td align="right">654.51076</td>
+<td align="right">0.6740692</td>
+<td align="right">0.5003055</td>
+</tr>
+<tr class="odd">
+<td align="left">Majority_Independent</td>
+<td align="right">2341.69966</td>
+<td align="right">613.94787</td>
+<td align="right">3.8141669</td>
+<td align="right">0.0001387</td>
+</tr>
+<tr class="even">
+<td align="left">after:Majority_Independent</td>
+<td align="right">-1779.99401</td>
+<td align="right">699.96706</td>
+<td align="right">-2.5429682</td>
+<td align="right">0.0110281</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="did-regression-on-independence-of-compensation-committee" class="section level3">
+<h3>DID Regression on Independence of Compensation Committee</h3>
+<p>[Put Appendix A here]</p>
+</div>
+<div id="did-regression-on-independence-of-audit-committee" class="section level3">
+<h3>DID Regression on Independence of Audit Committee</h3>
+<p>[Put Appendix B here]</p>
+</div>
+<div id="did-regression-on-independence-of-nominating-committee" class="section level3">
+<h3>DID Regression on Independence of Nominating Committee</h3>
+<p>[Put Appendix C here]</p>
+<p>From the DID regression tables above, we observe a positive relationship between CEO compensation and firm size, and net sales, which means CEOs of larger or more profitable companies tend to get more pay. This is also empirically supported by some scholars (e.g. Newman and Mozes, 1999). Notice that with the lapse of time, the company size of each of the firms in our sample typically get larger. It forms another aspect to understand the reverse causal relationship between company performances and economic cycles. This consideration is supported by some scholars who show that CEO compensation gets higher as the firm size gets larger (Boyd, 1994).</p>
+<p>In DID model for Majority_Independent (Table 6), if log(MarketValue) increases by 1 unit, CEOs get paid more by 2,357,797 dollars on average; if log(Sales) increases by 1 unit, the average increase of CEO pay is 1,600,032 dollars. The average decrease of CEO pay after a company became compliant with SOX is 1,779,994 dollars. There is an interesting fact that if a firm was compliant with the rules, the CEO of that firm gets 2,341,700 dollars more than his/her non-compliant counterpart. This could be the case that many firms were already informed of the release of the new rules and they had already changed their board structures for better management of the CEOs (GSW, 2012b). Therefore, it explains the difference in pays between CEOs from companies with fast reactions (which underlies good board structure) and companies that were not making adjustments to the new era.</p>
+<p>We also observe that only the interaction terms for “Majority_Independent” are significant. Therefore, we arbitrarily say the independences of the Nominating Committee, Audit Committee, and Compensation Committee are irrelevant to the CEO pay.</p>
+</div>
+</div>
+<div id="iv.-discussion" class="section level1">
+<h1>IV. Discussion</h1>
+<div id="summary" class="section level2">
+<h2>Summary</h2>
+<p>By adopting the difference-in-difference approach, we examine the average difference of CEO compensation before and after the implementation of SOX. For example, the interaction term of “after” and “Majority_Independent” states the difference of CEO pay if a firm that did not have a majority of independent directors on its board transformed to a complaint firm after 2002. From the DID regression tables, we observe a positive relationship between CEO compensation and firm size, and net sales. The average decrease of CEO pay after a company became compliant with SOX is 1,779,994 dollars, which means their average pay became 16.4% lower than before.</p>
+</div>
+<div id="conclusions" class="section level2">
+<h2>Conclusions</h2>
+<p>With the difference-in-difference approach, we discover that (i) board independence negatively affects the CEO compensation, which justifies the managerial power hypothesis; (ii) Companies that were already compliant with SOX before 2001 typically paid more to their CEOs; (iii) No significant evidence that shows relationships between CEO pay and the independence of Compensation Committee, the independence of Audit Committee, or the independence of Nominating Committee.</p>
+<p>The implication behind these is that if the board is filled with more independent directors, we would probably develop a more unbiased workplace and we could value CEOs with their contributions and performances instead of their relationships with other directors. A highly independent board also helps prevent the CEO from exploiting his/her power over the whole company. Besides, it reduces income inequality, at least to some extent, as the voice of the “eat the rich” movement becomes louder and louder that people do not agree with 1% of the world accumulating most of the world’s wealth. Therefore, we should reinforce the market and government supervision on the board composures of listed companies.</p>
+</div>
+<div id="weakness-next-steps" class="section level2">
+<h2>Weakness &amp; Next Steps</h2>
+<p>Although the managerial power hypothesis holds in our study, it is still questionable about the effectiveness of the data for independent committee members. Board composures and internal control systems could be very different from company to company. Some directors were just holding shares on behalf of the CEO. Therefore, the classification of directors in the original dataset could be compromised. Take Apple as an example, two of Steve Jobs’s closest friends, Campbell and Ellison, were considered independent directors.</p>
+<p>Another drawback is we did not take firm-specific factors or market performances into consideration. The decrease in CEO compensation after 2002 could be caused by the downward trend of business cycles in some industries, or bear market, after the burst of the “Internet Bubble”. This could also be the reason that caused a low Adjusted <span class="math inline">\(R^2\)</span>.</p>
+<p>Further study should focus on the effectiveness of independent committee members on CEO pay and their influence on the managerial power of the CEOs. The model could also add control variables for firm-specific factors and more potential independent variables.</p>
+</div>
+</div>
+<div id="v.-references" class="section level1">
+<h1>V. References</h1>
+<p>Boyd, B. K. (1994). Board control and ceo compensation. Strategic Management Journal, 15(5), 335–344. <a href="https://doi.org/https://doi.org/10.1002/smj.4250150502" class="uri">https://doi.org/https://doi.org/10.1002/smj.4250150502</a></p>
+<p>Chhaochharia, V., &amp; Grinstein, Y. (2009). Ceo compensation and board structure. The Journal of Finance, 64(1), 231–261. <a href="https://doi.org/https://doi.org/10.1111/j.1540-6261.2008.01433.x" class="uri">https://doi.org/https://doi.org/10.1111/j.1540-6261.2008.01433.x</a></p>
+<p>Chhaochharia, V., Grinstein, Y., Brav, A., Green, R., &amp; Michaely, R. (2012). Ceo compensation and board structure – there is an effect after all .</p>
+<p>Guthrie, K., Sokolowsky, J., &amp; Wan, K.-M. (2012a). Ceo compensation and board structure revisited. The Journal of Finance, 67(3), 1149–1168. <a href="https://doi.org/https://doi.org/10.1111/j.1540-6261.2012.01744.x" class="uri">https://doi.org/https://doi.org/10.1111/j.1540-6261.2012.01744.x</a></p>
+<p>Guthrie, K., Sokolowsky, J., &amp; Wan, K.-M. (2012b). Ceo compensation and board structure – rejoinder (SSRN Scholarly Paper ID 2084630). Social Science Research Network. <a href="https://papers.ssrn.com/abstract=2084630" class="uri">https://papers.ssrn.com/abstract=2084630</a></p>
+<p>Newman, H. A., &amp; Mozes, H. A. (1999). Does the composition of the compensation committee influence ceo compensation practices? Financial Management, 28(3), 41–53. <a href="https://doi.org/10.2307/3666182" class="uri">https://doi.org/10.2307/3666182</a></p>
+<p>Sarbanes-Oxley Act of 2002. (2002). <a href="https://www.govinfo.gov/content/pkg/COMPS-1883/pdf/COMPS-1883.pdf" class="uri">https://www.govinfo.gov/content/pkg/COMPS-1883/pdf/COMPS-1883.pdf</a></p>
+<p>Stein, G., &amp; Plaza, S. (2011). The role of the independent director in ceo supervision and turnover (SSRN Scholarly Paper ID 1782707). Social Science Research Network. <a href="https://papers.ssrn.com/abstract=1782707" class="uri">https://papers.ssrn.com/abstract=1782707</a></p>
+<div id="data-were-provided-by" class="section level3">
+<h3>Data were provided by:</h3>
+<p>CEO compensation: Wharton Research Data Services. “Compustat Executive Compensation” wrds.wharton.upenn.edu, accessed 12/05/2020.</p>
+<p>Company Financials: Wharton Research Data Services. “WRDS” wrds.wharton.upenn.edu, accessed 2020-12-05.</p>
+<p>Director Data: Wharton Research Data Services. “RiskMetrics (ISS)” wrds.wharton.upenn.edu, accessed 12/05/2020.</p>
+</div>
+<div id="data-cleaning-were-processed-with" class="section level3">
+<h3>Data Cleaning were Processed with:</h3>
+<p>StataCorp. 2017. Stata Statistical Software: Release 15. College Station, TX: StataCorp LLC.</p>
+</div>
+<div id="regression-analyses-were-processed-with" class="section level3">
+<h3>Regression Analyses were Processed with:</h3>
+<p>RStudio Team (2018). RStudio: Integrated Development for R. RStudio, Inc., Boston, MA URL
+<a href="http://www.rstudio.com/" class="uri">http://www.rstudio.com/</a>.</p>
+</div>
+<div id="r-packages-were-supported-by" class="section level3">
+<h3>R packages were Supported by:</h3>
+<p>Croissant Y, Millo G (2008). “Panel Data Econometrics in R: The plm Package.” <em>Journal of
+Statistical Software</em>, <em>27</em>(2), 1-43. doi: 10.18637/jss.v027.i02 (URL:
+<a href="https://doi.org/10.18637/jss.v027.i02" class="uri">https://doi.org/10.18637/jss.v027.i02</a>).</p>
+<p>David Robinson, Alex Hayes and Simon Couch (2020). broom: Convert Statistical Objects into Tidy
+Tibbles. R package version 0.7.2. <a href="https://CRAN.R-project.org/package=broom" class="uri">https://CRAN.R-project.org/package=broom</a></p>
+<p>Hadley Wickham, Romain François, Lionel Henry and Kirill Müller (2020). dplyr: A Grammar of Data
+Manipulation. R package version 1.0.2. <a href="https://CRAN.R-project.org/package=dplyr" class="uri">https://CRAN.R-project.org/package=dplyr</a></p>
+<p>Lukasz Komsta (2011). outliers: Tests for outliers. R package version 0.14.
+<a href="https://CRAN.R-project.org/package=outliers" class="uri">https://CRAN.R-project.org/package=outliers</a></p>
+<p>Wickham et al., (2019). Welcome to the tidyverse. Journal of Open Source Software, 4(43), 1686,
+<a href="https://doi.org/10.21105/joss.01686" class="uri">https://doi.org/10.21105/joss.01686</a></p>
+<p>Yihui Xie (2020). knitr: A General-Purpose Package for Dynamic Report Generation in R. R package
+version 1.30.</p>
+</div>
+<div id="appendix-a" class="section level2">
+<h2>Appendix A:</h2>
+<div id="did-regression-on-independence-of-compensation-committee-1" class="section level3">
+<h3>DID Regression on Independence of Compensation Committee</h3>
+<p><span class="math inline">\(TotalCompensation_i = \beta_1 * log(MarketValue_i) + \beta_2 * ReturnOnAsset_i + \beta_3 * log(Sales_i) + \beta_4 * After_i + \beta_5 * IndepCompensationCommittee_i + \beta_6 * After_i*IndepCompensationCommittee_i\)</span></p>
+<table>
+<caption><span id="tab:unnamed-chunk-7">Table 5: </span>Regression Results of DID on Independence of Compensation Committee</caption>
+<thead>
+<tr class="header">
+<th align="left">term</th>
+<th align="right">estimate</th>
+<th align="right">std.error</th>
+<th align="right">statistic</th>
+<th align="right">p.value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">log(MKTVAL)</td>
+<td align="right">2382.018472</td>
+<td align="right">323.08924</td>
+<td align="right">7.3726332</td>
+<td align="right">0.0000000</td>
+</tr>
+<tr class="even">
+<td align="left">ROA</td>
+<td align="right">-41.879279</td>
+<td align="right">10.45214</td>
+<td align="right">-4.0067676</td>
+<td align="right">0.0000627</td>
+</tr>
+<tr class="odd">
+<td align="left">log(SALES)</td>
+<td align="right">1742.635985</td>
+<td align="right">510.89241</td>
+<td align="right">3.4109647</td>
+<td align="right">0.0006536</td>
+</tr>
+<tr class="even">
+<td align="left">after</td>
+<td align="right">-1000.548220</td>
+<td align="right">258.36596</td>
+<td align="right">-3.8726007</td>
+<td align="right">0.0001094</td>
+</tr>
+<tr class="odd">
+<td align="left">Comp</td>
+<td align="right">257.622505</td>
+<td align="right">606.39963</td>
+<td align="right">0.4248395</td>
+<td align="right">0.6709761</td>
+</tr>
+<tr class="even">
+<td align="left">after:Comp</td>
+<td align="right">9.899342</td>
+<td align="right">678.36231</td>
+<td align="right">0.0145930</td>
+<td align="right">0.9883576</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="appendix-b" class="section level2">
+<h2>Appendix B:</h2>
+<div id="did-regression-on-independence-of-audit-committee-1" class="section level3">
+<h3>DID Regression on Independence of Audit Committee</h3>
+<p><span class="math inline">\(TotalCompensation_i = \beta_1 * log(MarketValue_i) + \beta_2 * ReturnOnAsset_i + \beta_3 * log(Sales_i) + \beta_4 * After_i + \beta_5 * IndepAuditCommittee_i + \beta_6 * After_i*IndepAuditCommittee_i\)</span></p>
+<table>
+<caption><span id="tab:unnamed-chunk-8">Table 6: </span>Regression Results of DID on Independence of Audit Committee</caption>
+<thead>
+<tr class="header">
+<th align="left">term</th>
+<th align="right">estimate</th>
+<th align="right">std.error</th>
+<th align="right">statistic</th>
+<th align="right">p.value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">log(MKTVAL)</td>
+<td align="right">2393.78347</td>
+<td align="right">322.99487</td>
+<td align="right">7.4112121</td>
+<td align="right">0.0000000</td>
+</tr>
+<tr class="even">
+<td align="left">ROA</td>
+<td align="right">-42.23117</td>
+<td align="right">10.45577</td>
+<td align="right">-4.0390304</td>
+<td align="right">0.0000547</td>
+</tr>
+<tr class="odd">
+<td align="left">log(SALES)</td>
+<td align="right">1764.90369</td>
+<td align="right">511.38970</td>
+<td align="right">3.4511913</td>
+<td align="right">0.0005638</td>
+</tr>
+<tr class="even">
+<td align="left">after</td>
+<td align="right">-1159.69873</td>
+<td align="right">264.94892</td>
+<td align="right">-4.3770653</td>
+<td align="right">0.0000123</td>
+</tr>
+<tr class="odd">
+<td align="left">Audit</td>
+<td align="right">-256.71274</td>
+<td align="right">553.78623</td>
+<td align="right">-0.4635593</td>
+<td align="right">0.6429882</td>
+</tr>
+<tr class="even">
+<td align="left">after:Audit</td>
+<td align="right">803.37545</td>
+<td align="right">612.57442</td>
+<td align="right">1.3114740</td>
+<td align="right">0.1897714</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="appendix-c" class="section level2">
+<h2>Appendix C:</h2>
+<div id="did-regression-on-independence-of-nominating-committee-1" class="section level3">
+<h3>DID Regression on Independence of Nominating Committee</h3>
+<p><span class="math inline">\(TotalCompensation_i = \beta_1 * log(MarketValue_i) + \beta_2 * ReturnOnAsset_i + \beta_3 * log(Sales_i) + \beta_4 * After_i + \beta_5 * IndepNominatingCommittee_i + \beta_6 * After_i*IndepNominatingCommittee_i\)</span></p>
+<table>
+<caption><span id="tab:unnamed-chunk-9">Table 7: </span>Regression Results of DID on Independence of Nominating Committee</caption>
+<thead>
+<tr class="header">
+<th align="left">term</th>
+<th align="right">estimate</th>
+<th align="right">std.error</th>
+<th align="right">statistic</th>
+<th align="right">p.value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">log(MKTVAL)</td>
+<td align="right">2382.46025</td>
+<td align="right">323.20169</td>
+<td align="right">7.3714350</td>
+<td align="right">0.0000000</td>
+</tr>
+<tr class="even">
+<td align="left">ROA</td>
+<td align="right">-41.88245</td>
+<td align="right">10.45139</td>
+<td align="right">-4.0073573</td>
+<td align="right">0.0000625</td>
+</tr>
+<tr class="odd">
+<td align="left">log(SALES)</td>
+<td align="right">1713.22107</td>
+<td align="right">511.41658</td>
+<td align="right">3.3499522</td>
+<td align="right">0.0008156</td>
+</tr>
+<tr class="even">
+<td align="left">after</td>
+<td align="right">-958.47713</td>
+<td align="right">251.81864</td>
+<td align="right">-3.8062199</td>
+<td align="right">0.0001432</td>
+</tr>
+<tr class="odd">
+<td align="left">Nom</td>
+<td align="right">685.87445</td>
+<td align="right">826.49873</td>
+<td align="right">0.8298554</td>
+<td align="right">0.4066690</td>
+</tr>
+<tr class="even">
+<td align="left">after:Nom</td>
+<td align="right">-636.43041</td>
+<td align="right">858.50343</td>
+<td align="right">-0.7413254</td>
+<td align="right">0.4585388</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>Notice that the 2000 data for Agilent Technologies is missing because of the data record problem. The same issue could happen to some of the other data because of data record problems or data selection criterion that was specified in Subsection of “Data Cleaning”. In an ideal way, the table should contain the 2000-2005 data for each company<a href="#fnref1" class="footnote-back">↩︎</a></p></li>
+</ol>
+</div>

@@ -10,4 +10,4 @@ eventhough I succinctly wrote about the process in my paper (the .pdf file in th
 All you need to have for the entire data cleaning process is three .dta files named "CEOCompensation.dta", "CompanyFinancials.dta", "DirectorData.dta",
 and the .do files. After processing the corresponding .dta file, I named them as "RefinedXXXXX.dta". 
 For the "RefinedXXXXX.dta", there are corresponding "DoRefinedXXXXX.do" that requires you to run it again on the refined .dta files.
-After running all these .do files, you would get the final dataset.
+After running all these .do files, you would get the final dataset. 

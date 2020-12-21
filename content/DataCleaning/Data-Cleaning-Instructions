@@ -1,0 +1,8 @@
+This is a folder that stores the data cleaning procedures, including the three raw .dta files for your discretion if you want to run it your self. 
+
+Notice that if a file's name is starting with "Do", like "DoDirector", it means that's the .do file for the corresponding .dta file. 
+e.g. "DoDirector.do" is supposed to process the data named "DirectorData.dta"
+
+"Cleaning_Process.log" is a file that recorded what I've done with STATA and it navigates you of how I got the final dataset.
+I recommend you to check for "Cleaning_Process.log" file becuase otherwise you will need a lot of time to understand what I've done with the data,
+eventhough I succinctly wrote about the process in my paper (the .pdf file in the main repository)

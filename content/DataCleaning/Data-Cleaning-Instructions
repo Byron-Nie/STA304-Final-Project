@@ -3,6 +3,11 @@ This is a folder that stores the data cleaning procedures, including the three r
 Notice that if a file's name is starting with "Do", like "DoDirector", it means that's the .do file for the corresponding .dta file. 
 e.g. "DoDirector.do" is supposed to process the data named "DirectorData.dta"
 
-"Cleaning_Process.log" is a file that recorded what I've done with STATA and it navigates you of how I got the final dataset.
+"Cleaning_Process.log" is a file that recorded what I've done with STATA and it navigates you on how I got the final dataset.
 I recommend you to check for "Cleaning_Process.log" file becuase otherwise you will need a lot of time to understand what I've done with the data,
 eventhough I succinctly wrote about the process in my paper (the .pdf file in the main repository)
+
+All you need to have for the entire data cleaning process is three .dta files named "CEOCompensation.dta", "CompanyFinancials.dta", "DirectorData.dta",
+and the .do files. After processing the corresponding .dta file, I named them as "RefinedXXXXX.dta". 
+For the "RefinedXXXXX.dta", there are corresponding "DoRefinedXXXXX.do" that requires you to run it again on the refined .dta files.
+After running all these .do files, you would get the final dataset.
